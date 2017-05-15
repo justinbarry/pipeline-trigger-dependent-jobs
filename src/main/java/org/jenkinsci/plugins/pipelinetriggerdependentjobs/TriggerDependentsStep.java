@@ -5,7 +5,6 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Run;
-import hudson.model.TaskListener;
 import org.jenkinsci.plugins.workflow.steps.*;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -13,6 +12,7 @@ import java.util.Set;
 
 /**
  * Created by jbarry on 5/12/17.
+ *
  */
 public class TriggerDependentsStep extends Step{
   private static final String STEP_NAME = "triggerDependents";
@@ -27,10 +27,9 @@ public class TriggerDependentsStep extends Step{
     return job;
   }
 
-
   @Override
   public StepExecution start(StepContext context) throws Exception {
-    return new TriggerDependentsStepImpl();
+    return new TriggerDependentsStepExecution(context, this);
   }
 
   @Extension
@@ -48,7 +47,7 @@ public class TriggerDependentsStep extends Step{
 
     @Override
     public Set<? extends Class<?>> getRequiredContext() {
-      return ImmutableSet.of(FilePath.class, Run.class, Launcher.class, TaskListener.class);
+      return ImmutableSet.of(FilePath.class, Run.class, Launcher.class);
     }
   }
 }
