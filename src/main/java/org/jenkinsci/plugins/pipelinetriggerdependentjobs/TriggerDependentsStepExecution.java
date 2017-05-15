@@ -27,6 +27,7 @@ import java.util.logging.Logger;
  *
  */
 public class TriggerDependentsStepExecution extends StepExecution {
+  private static final long serialVersionUID = 1L;
   private static final Logger LOGGER = Logger.getLogger(TriggerDependentsStep.class.getName());
 
   private transient TriggerDependentsStep step;
@@ -60,7 +61,9 @@ public class TriggerDependentsStepExecution extends StepExecution {
       }
       Map<String, Fingerprint> fingerprints = j.getLastSuccessfulBuild().getAction(FingerprintAction.class).getFingerprints();
       for(Fingerprint f: fingerprints.values()) {
-        if(parentJob == f.getOriginal().getJob()) {
+        Fingerprint.BuildPtr original = f.getOriginal();
+
+        if(original != null && parentJob == original.getJob()) {
           LOGGER.info("Found downstream job: " + j.getFullName());
           jobsToTrigger.add(j.getFullName());
         }
