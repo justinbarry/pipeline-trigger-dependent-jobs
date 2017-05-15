@@ -15,7 +15,7 @@ import java.util.Set;
  *
  */
 public class TriggerDependentsStep extends Step{
-  private static final String STEP_NAME = "triggerDependents";
+  private static final String STEP_NAME = "triggerDependentJobs";
   private String job;
 
   @DataBoundConstructor
