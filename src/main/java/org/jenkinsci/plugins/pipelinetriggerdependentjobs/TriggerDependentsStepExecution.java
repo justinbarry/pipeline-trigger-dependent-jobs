@@ -9,6 +9,7 @@ import hudson.tasks.Fingerprinter.FingerprintAction;
 import hudson.tasks.Messages;
 
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
@@ -32,18 +33,18 @@ public class TriggerDependentsStepExecution extends SynchronousStepExecution<Voi
   private static final Logger LOGGER = Logger.getLogger(TriggerDependentsStep.class.getName());
 
   private transient TriggerDependentsStep step;
-  private final transient Run<?, ?> build;
+  private final transient WorkflowRun build;
 
   TriggerDependentsStepExecution(StepContext context, TriggerDependentsStep step) throws Exception {
     super(context);
     this.step = step;
-    this.build = context.get(Run.class);
+    this.build = context.get(WorkflowRun.class);
   }
 
   @Override
   protected Void run() throws Exception {
     Jenkins jenkins = Jenkins.getActiveInstance();
-    WorkflowJob parentJob = (WorkflowJob) this.build.getParent();
+    WorkflowJob parentJob = this.build.getParent();
 
     HashSet<WorkflowJob> jobsToTrigger = new HashSet<>();
     LOGGER.info("Looking for downstream jobs: " + parentJob.getFullDisplayName());
@@ -52,7 +53,7 @@ public class TriggerDependentsStepExecution extends SynchronousStepExecution<Voi
 
     for(Iterator<WorkflowJob> i = allJobs.iterator(); i.hasNext();) {
       WorkflowJob j = i.next();
-      if(j.getLastSuccessfulBuild() == null || j == parentJob) {
+      if(j.getLastSuccessfulBuild() == null || j.getParent() == parentJob.getParent()) {
         continue;
       }
 
