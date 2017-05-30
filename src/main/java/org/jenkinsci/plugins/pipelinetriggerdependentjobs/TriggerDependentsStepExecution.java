@@ -8,6 +8,7 @@ import hudson.model.TaskListener;
 import hudson.tasks.Fingerprinter.FingerprintAction;
 import hudson.tasks.Messages;
 
+import hudson.util.RunList;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -15,10 +16,7 @@ import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 
 import javax.annotation.Nonnull;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,16 +55,28 @@ public class TriggerDependentsStepExecution extends SynchronousStepExecution<Voi
         continue;
       }
 
-      FingerprintAction fa = j.getLastSuccessfulBuild().getAction(FingerprintAction.class);
-      if(fa == null) {
-        continue;
+
+      RunList<WorkflowRun> buildList = j.getBuilds();
+
+      Map<String, Fingerprint> fingerprints =  new TreeMap<>();
+      for(WorkflowRun r: buildList) {
+        FingerprintAction fa = r.getAction(FingerprintAction.class);
+        if(fa == null) {
+          continue;
+        }
+
+        // We are looking for the last build with reported fingerprints regardless of results.
+        if(fa.getFingerprints().size() > 0) {
+          fingerprints = fa.getFingerprints();
+          break;
+        }
       }
-      Map<String, Fingerprint> fingerprints = j.getLastSuccessfulBuild().getAction(FingerprintAction.class).getFingerprints();
+
       for(Fingerprint f: fingerprints.values()) {
         Fingerprint.BuildPtr original = f.getOriginal();
 
         if(original != null && parentJob == original.getJob()) {
-          LOGGER.info("Found downstream job: " + j.getFullName());
+          LOGGER.info("Found downstream job: " + j.getFullName() + " Display name of artifact: " + f.getDisplayName());
           jobsToTrigger.add(j);
         }
       }
