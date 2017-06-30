@@ -18,8 +18,16 @@ import java.util.Set;
 public class TriggerDependentsStep extends Step{
   private static final String STEP_NAME = "triggerDependentJobs";
 
+  private final int depth;
+
   @DataBoundConstructor
-  public TriggerDependentsStep() {}
+  public TriggerDependentsStep(int depth) {
+    this.depth = depth;
+  }
+
+  public int getDepth() {
+    return this.depth;
+  }
 
   @Override
   public StepExecution start(StepContext context) throws Exception {

@@ -37,6 +37,7 @@ public class TriggerDependentsStepExecution extends SynchronousStepExecution<Voi
     super(context);
     this.step = step;
     this.build = context.get(WorkflowRun.class);
+
   }
 
   @Override
@@ -55,29 +56,20 @@ public class TriggerDependentsStepExecution extends SynchronousStepExecution<Voi
         continue;
       }
 
-
-      RunList<WorkflowRun> buildList = j.getBuilds();
-
-      Map<String, Fingerprint> fingerprints =  new TreeMap<>();
+      RunList<WorkflowRun> buildList = j.getBuilds().limit(step.getDepth());
       for(WorkflowRun r: buildList) {
         FingerprintAction fa = r.getAction(FingerprintAction.class);
         if(fa == null) {
           continue;
         }
 
-        // We are looking for the last build with reported fingerprints regardless of results.
-        if(fa.getFingerprints().size() > 0) {
-          fingerprints = fa.getFingerprints();
-          break;
-        }
-      }
+        for(Fingerprint f: fa.getFingerprints().values()) {
+          Fingerprint.BuildPtr original = f.getOriginal();
 
-      for(Fingerprint f: fingerprints.values()) {
-        Fingerprint.BuildPtr original = f.getOriginal();
-
-        if(original != null && parentJob == original.getJob()) {
-          LOGGER.info("Found downstream job: " + j.getFullName() + " Display name of artifact: " + f.getDisplayName());
-          jobsToTrigger.add(j);
+          if(original != null && parentJob == original.getJob()) {
+            LOGGER.info("Found downstream job: " + j.getFullName() + " Display name of artifact: " + f.getDisplayName());
+            jobsToTrigger.add(j);
+          }
         }
       }
     }
